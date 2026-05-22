@@ -1,15 +1,13 @@
 import requests
 import os
-import dotenv 
 from dotenv import load_dotenv
-env_path = os.path.join(os.path.dirname(__file__),'.env')
+
+env_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(env_path):
     load_dotenv(env_path)
 
 
-
 def get_weather_yandex(lat, lon, api_key):
-
     headers = {
         'X-Yandex-Weather-Key': api_key
     }
@@ -17,13 +15,10 @@ def get_weather_yandex(lat, lon, api_key):
 
     try:
         response = requests.get(url, headers=headers)
-
-        #print(response.json())      
-        
         response.raise_for_status()
         data = response.json()
 
-                # 📍 Проверка структуры
+        # 📍 Проверка структуры
         if not isinstance(data, dict):
             print("❌ Ответ не является JSON-объектом.")
             return
@@ -50,12 +45,12 @@ def get_weather_yandex(lat, lon, api_key):
         now_dt_str = data.get('now_dt', '—')
         if now_dt_str != '—':
             try:
-                from datetime import datetime
+                from datetime import datetime, timezone, timedelta
                 now_dt = datetime.fromisoformat(now_dt_str.replace('Z', '+00:00'))
-                local_tz = datetime.timezone(datetime.timedelta(seconds=tzinfo.get('offset', 0)))
+                local_tz = timezone(timedelta(seconds=tzinfo.get('offset', 0)))
                 local_time = now_dt.astimezone(local_tz)
                 time_str = local_time.strftime('%Y-%m-%d %H:%M:%S')
-            except:
+            except Exception:
                 time_str = now_dt_str
         else:
             time_str = '—'
@@ -70,7 +65,8 @@ def get_weather_yandex(lat, lon, api_key):
         print(f"☁️  Состояние: {condition}")
         print(f"💧 Влажность: {humidity}%")
         print(f"💨 Ветер: {wind_speed} м/с, порывы до {wind_gust} м/с, направление: {wind_dir}")
-        print(f"☁️  Облачность: {cloudness * 100 if isinstance(cloudness, (int, float)) else '—'}%")
+        cloudness_pct = cloudness * 100 if isinstance(cloudness, (int, float)) else '—'
+        print(f"☁️  Облачность: {cloudness_pct}%")
         print(f"⚡ Гроза: {'Да' if is_thunder else 'Нет'}")
         print("=" * 60)
 
@@ -87,8 +83,8 @@ def get_weather_yandex(lat, lon, api_key):
                     continue
                 temp_min = part.get('temp_min', '—')
                 temp_max = part.get('temp_max', '—')
-                condition = part.get('condition', '—')
-                print(f"🔹 {part_name.capitalize()}: {temp_min}°C — {temp_max}°C, {condition}")
+                part_condition = part.get('condition', '—')
+                print(f"🔹 {part_name.capitalize()}: {temp_min}°C — {temp_max}°C, {part_condition}")
         else:
             print("\n⚠️  Прогноз на сегодня недоступен.")
 
@@ -96,6 +92,7 @@ def get_weather_yandex(lat, lon, api_key):
         print(f"❌ Ошибка при запросе к API: {e}")
     except Exception as e:
         print(f"❌ Неожиданная ошибка: {e}")
+
 
 if __name__ == "__main__":
     print("🌤️ Привет! Введите координаты, чтобы узнать погоду через Yandex.")
@@ -106,6 +103,5 @@ if __name__ == "__main__":
         print("❌ Введите числа!")
         exit()
 
-    API_KEY=os.getenv("YANDEX_WEATHER_API_KEY")
+    API_KEY = os.getenv("YANDEX_WEATHER_API_KEY")
     get_weather_yandex(lat, lon, API_KEY)
-  
