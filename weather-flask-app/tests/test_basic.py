@@ -1,9 +1,11 @@
 import sys
 import os
+
+
 def test_import_app():
     try:
         sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-        from app import app, get_weather_description
+        from app import app  # Убран неиспользуемый импорт get_weather_description (F401)
         assert app is not None
         print("Приложение импортируется корректно")
         return True
@@ -13,6 +15,8 @@ def test_import_app():
     except Exception as e:
         print(f"Неожиданная ошибка: {e}")
         return False
+
+
 def test_weather_codes():
     try:
         from app import get_weather_description
@@ -41,6 +45,8 @@ def test_weather_codes():
     except Exception as e:
         print(f"Ошибка теста кодов погоды: {e}")
         return False
+
+
 def test_files_exist():
     required_files = [
         'app.py',
@@ -67,6 +73,7 @@ def test_files_exist():
 
     return all_exist
 
+
 if __name__ == "__main__":
     print("Запуск базовых тестов приложения")
     print("=" * 50)
@@ -89,3 +96,4 @@ if __name__ == "__main__":
     print(f"Результат: {passed}/{total} тестов пройдено")
 
     sys.exit(0 if passed == total else 1)
+    
