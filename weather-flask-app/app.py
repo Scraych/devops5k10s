@@ -1,15 +1,20 @@
 from flask import Flask, render_template, request
 import requests
-import os
+
+
 app = Flask(__name__)
 WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
+
+
 @app.route('/')
 def index():
- return render_template('index.html')
+    return render_template('index.html')
+
+
 @app.route('/weather', methods=['GET'])
 def get_weather():
     try:
-        latitude = request.args.get('lat', default=55.7558, type=float) # Москва по умолчанию
+        latitude = request.args.get('lat', default=55.7558, type=float)  # Москва по умолчанию
         longitude = request.args.get('lon', default=37.6173, type=float)
 
         params = {
@@ -23,25 +28,25 @@ def get_weather():
         response.raise_for_status()
 
         weather_data = response.json()
-
         current = weather_data.get('current_weather', {})
 
         weather_info = {
-        'temperature': current.get('temperature', 'N/A'),
-        'windspeed': current.get('windspeed', 'N/A'),
-        'winddirection': current.get('winddirection', 'N/A'),
-        'weathercode': current.get('weathercode', 'N/A'),
-        'latitude': latitude,
-        'longitude': longitude
+            'temperature': current.get('temperature', 'N/A'),
+            'windspeed': current.get('windspeed', 'N/A'),
+            'winddirection': current.get('winddirection', 'N/A'),
+            'weathercode': current.get('weathercode', 'N/A'),
+            'latitude': latitude,
+            'longitude': longitude
         }
         weather_info['description'] = get_weather_description(weather_info['weathercode'])
 
         return render_template('weather.html', weather=weather_info)
 
-    except requests.exceptions.RequestException as e:
-        return render_template('error.html', error=str(e)), 500
-    except Exception as e:
+    except requests.exceptions.RequestException:
+        return render_template('error.html', error="Ошибка запроса к API"), 500
+    except Exception:
         return render_template('error.html', error="Непредвиденная ошибка"), 500
+
 
 def get_weather_description(code):
     weather_codes = {
@@ -76,6 +81,7 @@ def get_weather_description(code):
     }
     return weather_codes.get(code, "Неизвестно")
 
+
 @app.route('/forecast')
 def get_forecast():
     try:
@@ -94,7 +100,6 @@ def get_forecast():
         response.raise_for_status()
 
         forecast_data = response.json()
-
         daily = forecast_data.get('daily', {})
 
         forecast_days = []
@@ -107,13 +112,16 @@ def get_forecast():
                 'description': get_weather_description(daily['weathercode'][i])
             })
 
-        return render_template('forecast.html',
-                                forecast=forecast_days,
-                                latitude=latitude,
-                                longitude=longitude)
+        return render_template(
+            'forecast.html',
+            forecast=forecast_days,
+            latitude=latitude,
+            longitude=longitude
+        )
 
-    except Exception as e:
-        return render_template('error.html', error=str(e)), 500
+    except Exception:
+        return render_template('error.html', error="Ошибка получения прогноза"), 500
+
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    app.run(debug=True, port=5000)
